@@ -1,5 +1,7 @@
 import subprocess
 import pymysql
+from contextlib import contextmanager
+from pymysql.cursors import DictCursor
 
 class MyMon(object):
 
@@ -28,10 +30,15 @@ class MyMon(object):
         yield conn
         conn.close()
 
-    def execute(self, query, args=None):
-        cursor = self._connect().cursor()
-        cursor.execute(query, args)
-        return cursor.fetchall()
+    def execute(self, query):
+        with self._connect() as conn:
+            return execute(conn, query)
+
+def execute(conn, query):
+    """Execute query in connection"""
+    cursor = conn.cursor()
+    cursor.execute(query)
+    return cursor.fetchall()
 
 def check_output(*popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.

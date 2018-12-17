@@ -20,4 +20,12 @@ def check(args):
     args_dict={k[2:]:v for k, v in args.items()}
     myobj = common.MyMon(host=args_dict['host'],user=args_dict['user'],password=args_dict['password'])
     qr = myobj.execute('SHOW SLAVE STATUS')
-    print(qr)
+    c = []
+    for row in qr:
+        r = {}
+        r['channel_name'] = row['Channel_Name']
+        r['io_running'] = row['Slave_IO_Running']
+        r['sql_running'] = row['Slave_SQL_Running']
+        r['seconds_behind_master'] = row['Seconds_Behind_Master']
+        c.append(r)
+    print(c)
