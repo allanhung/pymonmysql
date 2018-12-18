@@ -1,0 +1,12 @@
+myos:
+  percentage: 80
+
+repl:
+  --user: mymon
+  --password: mymon
+  seconds_behind_master: 2000
+
+email:
+  smtp_host: smtp-rly.com
+  receiver:
+    - someone@personal.com

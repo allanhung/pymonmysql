@@ -2,7 +2,7 @@
 
 """pymonmysql
 
-mysql dump import toolkit
+mysql monitor toolkit
 
 Usage:
   pymonmysql <module> <func> [<args>...]
@@ -23,6 +23,7 @@ def main():
     example:
     pymonmysql task track --trackid xxx
     """
+    config_file = '/etc/pymonmysql.yml'
     args = docopt(__doc__, options_first=True)
     module = args['<module>']
     func = args['<func>']

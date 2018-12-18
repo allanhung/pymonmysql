@@ -1,7 +1,39 @@
+from __future__ import division
 import subprocess
+import os
+import socket
+import math
 import pymysql
 from contextlib import contextmanager
 from pymysql.cursors import DictCursor
+import smtplib
+from email.mime.text import MIMEText
+import yaml
+
+class EmailHelper(object):
+    def __init__(self, smtp_host, receiver):
+        self._smtp_host = smtp_host
+        self._sender = "root@%s" % socket.getfqdn()
+        self._receiver = receiver
+
+    def send_email(self, subject, msg):
+        try:
+            smtp = smtplib.SMTP(self._smtp_host)
+
+            email_msg = MIMEText(str(msg))
+            email_msg['Subject'] = subject
+            email_msg['From'] = self._sender
+            email_msg['To'] = ';'.join(self._receiver)
+
+            print("Sending email to %s via %s with the subject '%s'" % (self._receiver, self._smtp_host, subject))
+            smtp.sendmail(self._sender, self._receiver, email_msg.as_string())
+            smtp.quit()
+        except Exception as e:
+            print("Failed to send email From: %s, To: %s" % (self._sender, self._receiver))
+            print(str(e))
+            return False
+
+        return True
 
 class MyMon(object):
 
@@ -39,6 +71,33 @@ def execute(conn, query):
     cursor = conn.cursor()
     cursor.execute(query)
     return cursor.fetchall()
+
+def readconfig(config_file):
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as ymlfile:
+             return yaml.load(ymlfile)
+    else:
+        return {}
+
+def disk_usage(path):
+    """Return disk usage statistics about the given path.
+
+    Returned valus is a named tuple with attributes 'total', 'used' and
+    'free', which are the amount of total, used and free space, in bytes.
+    """
+    st = os.statvfs(path)
+    free = st.f_bavail * st.f_frsize
+    total = st.f_blocks * st.f_frsize
+    used = (st.f_blocks - st.f_bfree) * st.f_frsize
+    percent = round((used / total) * 100)
+    return humansize(total), humansize(used), humansize(free), percent
+
+def humansize(size):
+    SUFFIXES = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+    for suffix in SUFFIXES:
+        size /= 1024
+        if size < 1024:
+            return '{0:.1f} {1}'.format(size, suffix)
 
 def check_output(*popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.

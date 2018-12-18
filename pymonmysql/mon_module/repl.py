@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-mysql dump schema
+check mysql replication
 
 Usage:
   pymonmysql repl check [--user USER] [--password PASSWORD] [--host HOST] [--port PORT]
@@ -17,15 +17,17 @@ Options:
 import common
 
 def check(args):
-    args_dict={k[2:]:v for k, v in args.items()}
-    myobj = common.MyMon(host=args_dict['host'],user=args_dict['user'],password=args_dict['password'])
+    myobj = common.MyMon(host=args['--host'],user=args['--user'],password=args['--password'])
     qr = myobj.execute('SHOW SLAVE STATUS')
-    c = []
+    c = {}
     for row in qr:
-        r = {}
-        r['channel_name'] = row['Channel_Name']
-        r['io_running'] = row['Slave_IO_Running']
-        r['sql_running'] = row['Slave_SQL_Running']
-        r['seconds_behind_master'] = row['Seconds_Behind_Master']
-        c.append(r)
-    print(c)
+        value = {'io_running': row['Slave_IO_Running'], \
+                 'sql_running': row['Slave_SQL_Running'], \
+                 'error_no': row['Last_Errno'], \
+                 'error': row['Last_Error'], \
+                 'seconds_behind_master': row['Seconds_Behind_Master']}
+        if 'Channel_Name' not in row.keys() or not row['Channel_Name']:
+            c['None']=value
+        else:
+            c[row['Channel_Name']]=value
+    return c
