@@ -31,7 +31,7 @@ def run(args):
                 mailsubject = r
             mailmsg.append(r)
             mailmsg.append(replmsg(r, channel, column))
-        elif column['seconds_behind_master'] < myconfig['repl']['seconds_behind_master']:
+        elif column['seconds_behind_master'] > myconfig['repl']['seconds_behind_master']:
             r = 'channel {} replication latency is more than {} secs.'.format(channel, myconfig['repl']['seconds_behind_master'])
             if not mailsubject:
                 mailsubject = r
