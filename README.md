@@ -2,8 +2,9 @@
 
 MySQL monito tool
 
-## How to Build
+## How to install
 ```sh
+$ pip install -r https://raw.githubusercontent.com/allanhung/pymonmysql/master/requirements.txt
 $ pip install git+https://github.com/allanhung/pymonmysql
 ```
     
@@ -17,8 +18,11 @@ $ pymonmysql repl check --user root --password testpass
 $ pymonmysql myos size
 ```
 ### crontab
-### modify setting
-/etc/pymonmysql.yml
+#### modify setting
 ```sh
-$ pymonmysql cron run
+/etc/pymonmysql.yml
+```
+#### crontab
+```sh
+*/10 * * * * pymonmysql cron run 2>&1
 ```
