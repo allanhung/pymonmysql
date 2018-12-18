@@ -39,7 +39,7 @@ def run(args):
     os_size = myos.size(args)
     for mount_point, column in os_size.items():
         if column['percent'] > myconfig['myos']['percentage']:
-            r = 'The size of mount point {} size is over {}%.'.format(mount_point, column['percent'])
+            r = 'The size of mount point {} size is over {}%.'.format(mount_point, myconfig['myos']['percentage'])
             if not mailsubject:
                 mailsubject = r
             mailmsg.append(diskmsg(r, mount_point, column))
