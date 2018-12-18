@@ -4,6 +4,8 @@ import os
 import socket
 import math
 import pymysql
+import requests
+import json
 from contextlib import contextmanager
 from pymysql.cursors import DictCursor
 import smtplib
@@ -35,8 +37,22 @@ class EmailHelper(object):
 
         return True
 
-class MyMon(object):
+class SlackHelper(object):
+    def __init__(self, webhook_url):
+        self.webhook_url = webhook_url
 
+    @staticmethod
+    def construct_message(channel, long_message):
+        message = {'channel': channel, 'username': socket.getfqdn(), 'text': long_message}
+        return message
+
+    def send(self, channel, long_message):
+        message = self.construct_message(channel, long_message)
+        myrequest = requests.post(self.webhook_url, data=json.dumps(message), headers={'Content-Type': 'application/json'})
+        if myrequest.status_code != 200:
+            raise Exception('%s %s' % (myrequest.status_code, myrequest.reason))
+
+class MyMon(object):
     def __init__(self, host='localhost', port=3306, user='root', password=None, socket=None):
         self.host = host
         self.port = int(port)

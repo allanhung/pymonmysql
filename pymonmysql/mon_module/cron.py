@@ -21,6 +21,7 @@ def run(args):
     mailmsg = []
     myconfig = common.readconfig(args['--config'])
     mymail = common.EmailHelper(myconfig['email']['smtp_host'], myconfig['email']['receiver'])
+    myslack = common.SlackHelper(myconfig['slack']['url'])
     repl_args = docopt(repl.__doc__, argv=['repl', 'check'])
     repl_args.update(myconfig['repl']) 
     repl_status = repl.check(repl_args)
@@ -29,7 +30,6 @@ def run(args):
             r = 'channel {} is not running.'.format(channel)
             if not mailsubject:
                 mailsubject = r
-            mailmsg.append(r)
             mailmsg.append(replmsg(r, channel, column))
         elif column['seconds_behind_master'] > myconfig['repl']['seconds_behind_master']:
             r = 'channel {} replication latency is more than {} secs.'.format(channel, myconfig['repl']['seconds_behind_master'])
@@ -39,12 +39,13 @@ def run(args):
     os_size = myos.size(args)
     for mount_point, column in os_size.items():
         if column['percent'] > myconfig['myos']['percentage']:
-            r = 'The size of mount point {} size is over {}%.'.format(mount_point, column['percent'])
+            r = 'The size of mount point {} size is over {}%.'.format(mount_point, myconfig['myos']['percentage'])
             if not mailsubject:
                 mailsubject = r
             mailmsg.append(diskmsg(r, mount_point, column))
     if mailsubject:        
         mymail.send_email(mailsubject, '\n\n'.join(mailmsg))
+        myslack.send(myconfig['slack']['channel'], '\n\n'.join(mailmsg))
     else:
         print(repl_status)
         print(os_size)
