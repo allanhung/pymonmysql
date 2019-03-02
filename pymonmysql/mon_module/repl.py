@@ -5,12 +5,14 @@ check mysql replication
 
 Usage:
   pymonmysql repl check [--user USER] [--password PASSWORD] [--host HOST] [--port PORT]
+  pymonmysql repl start_slave [--user USER] [--password PASSWORD] [--host HOST] [--port PORT] [--channel CHANNEL]
 
 Options:
   --user USER               database login user [default: root]
   --password PASSWORD       database login password
   --host HOST               database host [default: localhost]
   --port PORT               database port [default: 3306]
+  --channel CHANNEL         replication channel
   -h --help                 Show this screen.
 """
 
@@ -31,3 +33,10 @@ def check(args):
         else:
             c[row['Channel_Name']]=value
     return c
+
+def start_slave(args):
+    myobj = common.MyMon(host=args['--host'],user=args['--user'],password=args['--password'])
+    if args['--channel']:
+        qr = myobj.execute("START SLAVE FOR CHANNEL '{}'".format(args['--channel']))
+    else:
+        qr = myobj.execute("START SLAVE")

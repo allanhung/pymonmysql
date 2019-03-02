@@ -1,10 +1,12 @@
 myos:
   percentage: 80
+  loadavg: 20
 
 repl:
   --user: mymon
   --password: mymon
   seconds_behind_master: 2000
+  auto_slave_restart: 1
 
 email:
   smtp_host: smtp-rly.com
