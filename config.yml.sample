@@ -9,6 +9,10 @@ repl:
   auto_slave_restart: 1
   test_tcp_connect: 1
 
+proc:
+  --rc: 10
+  --querytime: 500
+
 email:
   smtp_host: smtp-rly.com
   receiver:

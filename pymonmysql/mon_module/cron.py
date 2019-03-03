@@ -14,6 +14,7 @@ Options:
 import common
 import repl
 import myos
+import proc
 from docopt import docopt
 
 def run(args):
@@ -26,6 +27,7 @@ def run(args):
     # replication status
     repl_args = docopt(repl.__doc__, argv=['repl', 'check'])
     repl_args.update(myconfig['repl']) 
+    repl_args.update(myconfig['proc']) 
     repl_status = repl.check(repl_args)
     for channel, column in repl_status.items():
         if 'test_tcp_connect' in myconfig['repl'].keys() and myconfig['repl']['test_tcp_connect']:
@@ -70,6 +72,15 @@ def run(args):
                 mailmsg.append(loadmsg(r, avg_period, avg_load))
                 break
 
+    # proc
+    if 'proc' in myconfig.keys():
+        top_procs = proc.list(repl_args)
+        if top_procs:
+            r = 'There are queries running more than {} secs.'.format(myconfig['proc']['--querytime'])
+            if not mailsubject:
+                mailsubject = r
+            mailmsg.append(procmsg(r, top_procs))
+            
     if mailsubject:        
         myslack.send(myconfig['slack']['channel'], '\n\n'.join(mailmsg))
         mymail.send_email(mailsubject, '\n\n'.join(mailmsg))
@@ -109,4 +120,12 @@ def loadmsg(reason, period, load):
     mailmsg = []
     mailmsg.append('========== '+reason+' ==========')
     mailmsg.append('            {} load: {}'.format(period, load))
+    return '\n'.join(mailmsg)
+    
+def procmsg(reason, procs):
+    mailmsg = []
+    mailmsg.append('========== '+reason+' ==========')
+    for proc in procs:
+        mailmsg.append('time: {} secs'.format(proc['TIME']))
+        mailmsg.append('query: {}'.format(proc['INFO']))
     return '\n'.join(mailmsg)
