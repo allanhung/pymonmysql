@@ -13,6 +13,8 @@ Options:
 
 import common
 import os
+import time
+import socket
 
 def size(args):
     d = {}
@@ -27,3 +29,16 @@ def size(args):
 def load(args):
     (a, b, c) = os.getloadavg()
     return {'1min': a, '5min': b, '15min': c} 
+
+def check_port(address, port):
+    # Create a TCP socket   
+    msg = []
+    s = socket.socket()
+    msg.append("%s, Attempting to connect to %s on port %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), address, port))
+    try:
+        s.connect((address, port))
+        s.settimeout(2)
+        msg.append("%s, Connected to %s on port %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), address, port))
+    except socket.error, e:
+        msg.append("%s, Connection to %s on port %s failed: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), address, port, e))
+    return msg

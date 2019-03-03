@@ -23,7 +23,9 @@ def check(args):
     qr = myobj.execute('SHOW SLAVE STATUS')
     c = {}
     for row in qr:
-        value = {'io_running': row['Slave_IO_Running'], \
+        value = {'master_host': row['Master_Host'], \
+                 'master_port': row['Master_Port'], \
+                 'io_running': row['Slave_IO_Running'], \
                  'sql_running': row['Slave_SQL_Running'], \
                  'error_no': row['Last_Errno'], \
                  'error': row['Last_Error'], \
