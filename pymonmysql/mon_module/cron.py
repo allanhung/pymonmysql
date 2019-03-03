@@ -71,8 +71,8 @@ def run(args):
                 break
 
     if mailsubject:        
-        mymail.send_email(mailsubject, '\n\n'.join(mailmsg))
         myslack.send(myconfig['slack']['channel'], '\n\n'.join(mailmsg))
+        mymail.send_email(mailsubject, '\n\n'.join(mailmsg))
     else:
         print(repl_status)
         print(os_size)
