@@ -29,9 +29,11 @@ def run(args):
     repl_status = repl.check(repl_args)
     for channel, column in repl_status.items():
         if 'test_tcp_connect' in myconfig['repl'].keys() and myconfig['repl']['test_tcp_connect']:
-            if not mailsubject:
-                mailsubject = 'MySQL debug message - Test TCP Connect'
-            mailmsg.append(debugmsg(myos.check_port(column['master_host'], column['master_port'])))        
+            connected, tcpmsg = myos.check_port(column['master_host'], column['master_port'])
+            if not connected:
+                if not mailsubject:
+                    mailsubject = 'Connection to {} on port {} failed'.format(column['master_host'], column['master_port'])
+                mailmsg.append(debugmsg(tcpmsg))
         if column['io_running'] <> 'Yes' or column['sql_running'] <> 'Yes':
             if column['io_running'] <> 'Yes' and 'auto_slave_restart' in myconfig['repl'].keys() and myconfig['repl']['auto_slave_restart']:
                 repl_args.update({'--channel': channel})

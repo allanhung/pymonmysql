@@ -33,12 +33,15 @@ def load(args):
 def check_port(address, port):
     # Create a TCP socket   
     msg = []
+    connected = True
     s = socket.socket()
     msg.append("%s, Attempting to connect to %s on port %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), address, port))
     try:
         s.connect((address, port))
         s.settimeout(2)
         msg.append("%s, Connected to %s on port %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), address, port))
+        connected = True
     except socket.error, e:
         msg.append("%s, Connection to %s on port %s failed: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), address, port, e))
-    return msg
+        connected = False
+    return connected, msg
