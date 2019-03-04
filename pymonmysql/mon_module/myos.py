@@ -34,18 +34,19 @@ def load(args):
 
 def oom(args):
     oom = []
-    result = common.check_output(["grep -i 'killed process' /var/log/messages"], shell=True)
-    current_year = time.strftime("%Y")
-    if args['--period']:
-        time_start = time.time()-60*int(args['--period'])
-        for row in reversed(result.strip().split("\n")):
-            if time.mktime(time.strptime(current_year+' '+row[:15], '%Y %b %d %H:%M:%S')) > time_start:
+    retcode, result = common.check_output(["grep -i 'killed process' /var/log/messages"], shell=True)
+    if not retcode:
+        current_year = time.strftime("%Y")
+        if args['--period']:
+            time_start = time.time()-60*int(args['--period'])
+            for row in reversed(result.strip().split("\n")):
+                if time.mktime(time.strptime(current_year+' '+row[:15], '%Y %b %d %H:%M:%S')) > time_start:
+                    oom.append(row)
+                else:
+                    break
+        else:
+            for row in reversed(result.strip().split("\n")):
                 oom.append(row)
-            else:
-                break
-    else:
-        for row in reversed(result.strip().split("\n")):
-            oom.append(row)
     return oom    
 
 def check_port(address, port):
