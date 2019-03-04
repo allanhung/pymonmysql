@@ -28,29 +28,34 @@ def run(args):
     repl_args = docopt(repl.__doc__, argv=['repl', 'check'])
     repl_args.update(myconfig['repl']) 
     repl_args.update(myconfig['proc']) 
-    repl_status = repl.check(repl_args)
-    for channel, column in repl_status.items():
-        if 'test_tcp_connect' in myconfig['repl'].keys() and myconfig['repl']['test_tcp_connect']:
-            connected, tcpmsg = myos.check_port(column['master_host'], column['master_port'])
-            if not connected:
+    try:
+        repl_status = repl.check(repl_args)
+        for channel, column in repl_status.items():
+            if 'test_tcp_connect' in myconfig['repl'].keys() and myconfig['repl']['test_tcp_connect']:
+                connected, tcpmsg = myos.check_port(column['master_host'], column['master_port'])
+                if not connected:
+                    if not mailsubject:
+                        mailsubject = 'Connection to {} on port {} failed'.format(column['master_host'], column['master_port'])
+                    mailmsg.append(debugmsg(tcpmsg))
+            if column['io_running'] <> 'Yes' or column['sql_running'] <> 'Yes':
+                if column['io_running'] <> 'Yes' and 'auto_slave_restart' in myconfig['repl'].keys() and myconfig['repl']['auto_slave_restart']:
+                    repl_args.update({'--channel': channel})
+                    repl.start_slave(repl_args)
+                    r = 'channel {} is not running, try to auto restart.'.format(channel)
+                else:
+                    r = 'channel {} is not running.'.format(channel)
                 if not mailsubject:
-                    mailsubject = 'Connection to {} on port {} failed'.format(column['master_host'], column['master_port'])
-                mailmsg.append(debugmsg(tcpmsg))
-        if column['io_running'] <> 'Yes' or column['sql_running'] <> 'Yes':
-            if column['io_running'] <> 'Yes' and 'auto_slave_restart' in myconfig['repl'].keys() and myconfig['repl']['auto_slave_restart']:
-                repl_args.update({'--channel': channel})
-                repl.start_slave(repl_args)
-                r = 'channel {} is not running, try to auto restart.'.format(channel)
-            else:
-                r = 'channel {} is not running.'.format(channel)
-            if not mailsubject:
-                mailsubject = r
-            mailmsg.append(replmsg(r, channel, column))
-        elif column['seconds_behind_master'] > myconfig['repl']['seconds_behind_master']:
-            r = 'channel {} replication latency is more than {} secs.'.format(channel, myconfig['repl']['seconds_behind_master'])
-            if not mailsubject:
-                mailsubject = r
-            mailmsg.append(replmsg(r, channel, column))
+                    mailsubject = r
+                mailmsg.append(replmsg(r, channel, column))
+            elif column['seconds_behind_master'] > myconfig['repl']['seconds_behind_master']:
+                r = 'channel {} replication latency is more than {} secs.'.format(channel, myconfig['repl']['seconds_behind_master'])
+                if not mailsubject:
+                    mailsubject = r
+                mailmsg.append(replmsg(r, channel, column))
+    except Exception as e:
+        if not mailsubject:
+            mailsubject = 'monitor program error when check replication'
+            mailmsg.append(expectmsg(r, e))
 
     # os size
     os_size = myos.size(args)
@@ -66,20 +71,35 @@ def run(args):
         os_load = myos.load(args)
         for avg_period, avg_load in os_load.items():
             if avg_load > myconfig['myos']['load']:
-                r = 'The load average {} is {} over {}%.'.format(avg_period, avg_load, myconfig['myos']['load'])
+                r = 'The load average {} is {} over {}.'.format(avg_period, avg_load, myconfig['myos']['load'])
                 if not mailsubject:
                     mailsubject = r
                 mailmsg.append(loadmsg(r, avg_period, avg_load))
                 break
 
-    # proc
-    if 'proc' in myconfig.keys():
-        top_procs = proc.list(repl_args)
-        if top_procs:
-            r = 'There are queries running more than {} secs.'.format(myconfig['proc']['--querytime'])
+    # oom check
+    if 'oom' in myconfig['myos'].keys():
+        oom = myos.oom(myconfig['myos']['oom'])
+        if oom:
+            r = 'kernel: Out of Memory'
             if not mailsubject:
                 mailsubject = r
-            mailmsg.append(procmsg(r, top_procs))
+            mailmsg.append(oommsg(r, oom))
+
+    # proc
+    try:
+        if 'proc' in myconfig.keys():
+            top_procs = proc.list(repl_args)
+            if top_procs:
+                r = 'There are queries running more than {} secs.'.format(myconfig['proc']['--querytime'])
+                if not mailsubject:
+                    mailsubject = r
+                mailmsg.append(procmsg(r, top_procs))
+    except Exception as e:
+        if not mailsubject:
+            mailsubject = 'monitor program error when check processlist'
+            mailmsg.append(expectmsg(r, e))
+
             
     if mailsubject:        
         myslack.send(myconfig['slack']['channel'], '\n\n'.join(mailmsg))
@@ -88,6 +108,18 @@ def run(args):
         print(repl_status)
         print(os_size)
         print(os_load)
+
+def oommsg(reason, msg):
+    mailmsg = []
+    mailmsg.append('========== '+reason+' ==========')
+    mailmsg.extend(msg)
+    return '\n'.join(mailmsg)
+
+def expectmsg(reason, msg):
+    mailmsg = []
+    mailmsg.append('========== '+reason+' ==========')
+    mailmsg.append('error message: {}'.format(msg))
+    return '\n'.join(mailmsg)
 
 def debugmsg(msg):
     mailmsg = []

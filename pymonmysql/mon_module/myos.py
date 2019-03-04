@@ -6,9 +6,11 @@ check os mount point size
 Usage:
   pymonmysql myos size
   pymonmysql myos load
+  pymonmysql myos oom [--period PERIOD]
 
 Options:
   -h --help                 Show this screen.
+  --period PERIOD           check period (mins)
 """
 
 import common
@@ -29,6 +31,22 @@ def size(args):
 def load(args):
     (a, b, c) = os.getloadavg()
     return {'1min': a, '5min': b, '15min': c} 
+
+def oom(args):
+    oom = []
+    result = common.check_output(["grep -i 'killed process' /var/log/messages"], shell=True)
+    current_year = time.strftime("%Y")
+    if args['--period']:
+        time_start = time.time()-60*int(args['--period'])
+        for row in reversed(result.strip().split("\n")):
+            if time.mktime(time.strptime(current_year+' '+row[:15], '%Y %b %d %H:%M:%S')) > time_start:
+                oom.append(row)
+            else:
+                break
+    else:
+        for row in reversed(result.strip().split("\n")):
+            oom.append(row)
+    return oom    
 
 def check_port(address, port):
     # Create a TCP socket   

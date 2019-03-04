@@ -10,7 +10,7 @@ Usage:
 Options:
   --user USER               database login user [default: root]
   --password PASSWORD       database login password
-  --host HOST               database host [default: localhost]
+  --host HOST               database host [default: 127.0.0.1]
   --port PORT               database port [default: 3306]
   --channel CHANNEL         replication channel
   -h --help                 Show this screen.

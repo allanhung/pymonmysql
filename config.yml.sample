@@ -1,7 +1,9 @@
 myos:
   percentage: 80
   loadavg: 20
-
+  oom:
+    --period: 10
+    
 repl:
   --user: mymon
   --password: mymon
