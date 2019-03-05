@@ -53,7 +53,7 @@ class SlackHelper(object):
             raise Exception('%s %s' % (myrequest.status_code, myrequest.reason))
 
 class MyMon(object):
-    def __init__(self, host='localhost', port=3306, user='root', password=None, socket=None):
+    def __init__(self, host='127.0.0.1', port=3306, user='root', password=None, socket=None):
         self.host = host
         self.port = int(port)
         self.user = user

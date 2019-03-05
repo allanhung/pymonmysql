@@ -11,7 +11,7 @@ Usage:
 Options:
   --user USER               database login user [default: root]
   --password PASSWORD       database login password
-  --host HOST               database host [default: localhost]
+  --host HOST               database host [default: 127.0.0.1]
   --port PORT               database port [default: 3306]
   --querytime QTIME         sql running time
   --rc RC                   return recoed count
@@ -24,7 +24,7 @@ from pprint import pprint
 
 def list(args):
     myobj = common.MyMon(host=args['--host'],user=args['--user'],password=args['--password'])
-    query = "select * from information_schema.PROCESSLIST where command <> 'Sleep' and user not in ('event_scheduler', 'root', 'system user') and info <> NULL"
+    query = "select * from information_schema.PROCESSLIST where command <> 'Sleep' and user not in ('event_scheduler', 'root', 'system user') and info is not NULL"
     if args['--querytime']:
         query += " and time > {}".format(args['--querytime'])
     query = "{} order by time desc limit {}".format(query, args['--rc']) if args['--rc'] else "{} order by time desc".format(query)
@@ -34,7 +34,7 @@ def list(args):
 
 def export(args):
     myobj = common.MyMon(host=args['--host'],user=args['--user'],password=args['--password'])
-    query = "select * from information_schema.PROCESSLIST where command <> 'Sleep' and user not in ('event_scheduler', 'root', 'system user') and info <> NULL"
+    query = "select * from information_schema.PROCESSLIST where command <> 'Sleep' and user not in ('event_scheduler', 'root', 'system user') and info is not NULL"
     if args['--querytime']:
         query += " and time > {}".format(args['--querytime'])
     output_filename = '/tmp/mysql_proc_{}.txt'.format(time.strftime("%Y%m%d%H%M%S", time.localtime()))
