@@ -159,5 +159,7 @@ def procmsg(reason, procs):
     mailmsg.append('========== '+reason+' ==========')
     for proc in procs:
         mailmsg.append('time: {} secs'.format(proc['TIME']))
+        mailmsg.append('user: {}'.format(proc['User']))
+        mailmsg.append('host: {}'.format(proc['Host']))
         mailmsg.append('query: {}'.format(proc['INFO']))
     return '\n'.join(mailmsg)
